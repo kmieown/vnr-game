@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Trắc Nghiệm Lịch Sử Đảng</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fef5e7 0%, #ffe4e1 50%, #fef5e7 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc143c 0%, #ffd700 100%);
+            color: white;
+            padding: 30px;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .score-box {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .progress-text {
+            font-size: 14px;
+            min-width: 100px;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: white;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .content {
+            padding: 40px;
+        }
+        .question {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .option {
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 16px;
+        }
+        .option:hover:not(.disabled) {
+            border-color: #dc143c;
+            background: #fff5f5;
+            transform: translateX(5px);
+        }
+        .option.selected {
+            border-color: #dc143c;
+            background: #fff5f5;
+        }
+        .option.correct {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .option.wrong {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .option.disabled {
+            cursor: not-allowed;
+        }
+        .option-letter {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .option.correct .option-letter {
+            background: #28a745;
+            color: white;
+        }
+        .option.wrong .option-letter {
+            background: #dc3545;
+            color: white;
+        }
+        .explanation {
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #ffc107;
+            background: #fff3cd;
+        }
+        .explanation.correct-answer {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .explanation-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .explanation-text {
+            color: #333;
+            line-height: 1.6;
+        }
+        .btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #dc143c 0%, #ffd700 100%);
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 20, 60, 0.3);
+        }
+        .result-screen {
+            text-align: center;
+            padding: 40px;
+        }
+        .trophy {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .result-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .score-display {
+            background: linear-gradient(135deg, #dc143c 0%, #ffd700 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .score-number {
+            font-size: 60px;
+            font-weight: bold;
+        }
+        .score-label {
+            font-size: 24px;
+            margin-top: 10px;
+        }
+        .score-message {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .result-detail {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        .result-detail-title {
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .result-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .icon-check {
+            color: #28a745;
+            font-size: 20px;
+        }
+        .icon-x {
+            color: #dc3545;
+            font-size: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        const questions = [
+            {
+                id: 1,
+                question: "Tại sao Đảng Cộng sản Việt Nam phải tiến hành Đổi mới năm 1986?",
+                options: [
+                    "Do yêu cầu của Liên Hợp Quốc",
+                    "Do khủng hoảng kinh tế - xã hội trong nước",
+                    "Vì muốn theo mô hình tư bản chủ nghĩa",
+                    "Do sức ép của các doanh nghiệp tư nhân"
+                ],
+                correctAnswer: 1,
+                explanation: "Giai đoạn 1975–1985, Việt Nam lâm vào khủng hoảng toàn diện, lạm phát tăng cao, đời sống khó khăn. Đổi mới là yêu cầu sống còn."
+            },
+            {
+                id: 2,
+                question: "Đại hội VI (1986) được coi là \"Đại hội Đổi mới\" vì:",
+                options: [
+                    "Lần đầu tiên Việt Nam tuyên bố độc lập",
+                    "Thay đổi mục tiêu xây dựng CNXH",
+                    "Đề ra đường lối đổi mới toàn diện, trọng tâm là đổi mới kinh tế",
+                    "Gia nhập ASEAN"
+                ],
+                correctAnswer: 2,
+                explanation: "Đại hội VI xác định đổi mới tư duy, phá bỏ cơ chế bao cấp, xây dựng kinh tế nhiều thành phần theo định hướng XHCN."
+            },
+            {
+                id: 3,
+                question: "Thành tựu nổi bật nhất của công cuộc Đổi Mới là gì?",
+                options: [
+                    "Xuất khẩu gạo đứng thứ 3 thế giới",
+                    "Việt Nam trở thành nước thu nhập cao",
+                    "Việt Nam trở thành thành viên Liên minh châu Âu",
+                    "Tỷ lệ người dân dùng Internet đạt 100%"
+                ],
+                correctAnswer: 0,
+                explanation: "Sau Đổi mới, từ một nước thiếu ăn, Việt Nam trở thành quốc gia xuất khẩu gạo hàng đầu thế giới, thể hiện sự thay đổi căn bản của nền kinh tế nông nghiệp."
+            },
+            {
+                id: 4,
+                question: "Chuyển đổi số hiện nay được Đảng xác định là gì?",
+                options: [
+                    "Một xu hướng tự phát của doanh nghiệp",
+                    "Nhiệm vụ chiến lược quốc gia, động lực phát triển mới",
+                    "Chỉ là chuyển tất cả thành online",
+                    "Làm theo trào lưu thế giới"
+                ],
+                correctAnswer: 1,
+                explanation: "Nghị quyết 52-NQ/TW khẳng định chuyển đổi số là động lực phát triển nhanh và bền vững đất nước."
+            },
+            {
+                id: 5,
+                question: "Mục tiêu đến năm 2045 của Đảng là gì?",
+                options: [
+                    "Việt Nam trở thành cường quốc quân sự số một thế giới",
+                    "Trở thành nước phát triển, thu nhập cao",
+                    "Xóa bỏ Internet",
+                    "Quay lại cơ chế bao cấp"
+                ],
+                correctAnswer: 1,
+                explanation: "Văn kiện Đại hội XIII xác định mục tiêu đến năm 2045, Việt Nam trở thành nước phát triển, thu nhập cao."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let answeredQuestions = [];
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (currentQuestion >= questions.length) {
+                app.innerHTML = renderResultScreen();
+            } else {
+                app.innerHTML = renderQuestionScreen();
+            }
+        }
+
+        function renderQuestionScreen() {
+            const q = questions[currentQuestion];
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            
+            return `
+                <div class="container">
+                    <div class="header">
+                        <div class="header-top">
+                            <div class="title">⭐ Lịch Sử Đảng Quiz</div>
+                            <div class="score-box">${score}/${questions.length}</div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-text">Câu hỏi ${currentQuestion + 1}/${questions.length}</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="question">${q.question}</div>
+                        
+                        <div class="options">
+                            ${q.options.map((option, index) => {
+                                let className = 'option';
+                                if (selectedAnswer !== null) {
+                                    className += ' disabled';
+                                    if (index === q.correctAnswer) className += ' correct';
+                                    if (index === selectedAnswer && selectedAnswer !== q.correctAnswer) className += ' wrong';
+                                }
+                                return `
+                                    <div class="${className}" onclick="selectAnswer(${index})">
+                                        <div class="option-letter">${String.fromCharCode(65 + index)}</div>
+                                        <div>${option}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        ${selectedAnswer !== null ? `
+                            <div class="explanation ${selectedAnswer === q.correctAnswer ? 'correct-answer' : ''}">
+                                <div class="explanation-title">
+                                    ${selectedAnswer === q.correctAnswer ? '✓ Chính xác!' : '✗ Giải thích:'}
+                                </div>
+                                <div class="explanation-text">${q.explanation}</div>
+                            </div>
+                            
+                            <button class="btn" onclick="nextQuestion()">
+                                ${currentQuestion < questions.length - 1 ? 'Câu tiếp theo →' : 'Xem kết quả 🎯'}
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResultScreen() {
+            const percentage = (score / questions.length) * 100;
+            let message = '';
+            if (percentage === 100) message = "Xuất sắc! Bạn là chuyên gia lịch sử! 🎉";
+            else if (percentage >= 80) message = "Tuyệt vời! Kiến thức của bạn rất tốt! 👏";
+            else if (percentage >= 60) message = "Khá tốt! Hãy tiếp tục học hỏi! 📚";
+            else message = "Cần cố gắng thêm! Đọc lại tài liệu nhé! 💪";
+            
+            return `
+                <div class="container">
+                    <div class="result-screen">
+                        <div class="trophy">🏆</div>
+                        <div class="result-title">Hoàn Thành!</div>
+                        
+                        <div class="score-display">
+                            <div class="score-number">${score}/${questions.length}</div>
+                            <div class="score-label">Điểm số của bạn</div>
+                        </div>
+                        
+                        <div class="score-message">${message}</div>
+                        
+                        <div class="result-detail">
+                            <div class="result-detail-title">Kết quả chi tiết:</div>
+                            ${answeredQuestions.map((ans, idx) => `
+                                <div class="result-item">
+                                    <span class="${ans.correct ? 'icon-check' : 'icon-x'}">
+                                        ${ans.correct ? '✓' : '✗'}
+                                    </span>
+                                    <span>Câu ${idx + 1}: ${ans.correct ? 'Đúng' : 'Sai'}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <button class="btn" onclick="resetGame()">
+                            🔄 Chơi lại
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectAnswer(index) {
+            if (selectedAnswer !== null) return;
+            
+            selectedAnswer = index;
+            const isCorrect = index === questions[currentQuestion].correctAnswer;
+            
+            if (isCorrect) {
+                score++;
+            }
+            
+            answeredQuestions.push({
+                question: currentQuestion,
+                correct: isCorrect
+            });
+            
+            render();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            selectedAnswer = null;
+            render();
+        }
+
+        function resetGame() {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            answeredQuestions = [];
+            render();
+        }
+
+        // Khởi động game
+        render();
+    </script>
+</body>
+</html>
