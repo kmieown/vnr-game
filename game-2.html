@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò chơi Lật Thẻ Nhớ: Đường Lối Đổi Mới</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fef5e7 0%, #fff9e6 50%, #fef5e7 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #c0392b;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-label {
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #c0392b;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .card {
+            height: 180px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card.flipped .card-container {
+            transform: rotateY(180deg);
+        }
+
+        .card-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #c0392b 0%, #e67e22 100%);
+            border: 4px solid #a93226;
+            color: white;
+            font-size: 4rem;
+            font-weight: bold;
+        }
+
+        .card-back.question {
+            background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
+            border: 4px solid #1976d2;
+        }
+
+        .card-back.answer {
+            background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+            border: 4px solid #7b1fa2;
+        }
+
+        .card-front {
+            background: #fff9e6;
+            border: 4px solid #f39c12;
+            transform: rotateY(180deg);
+        }
+
+        .card-front.question {
+            background: #e3f2fd;
+            border: 4px solid #2196f3;
+        }
+
+        .card-front.answer {
+            background: #f3e5f5;
+            border: 4px solid #9c27b0;
+        }
+
+        .card.matched .card-front {
+            background: #d5f4e6;
+            border-color: #27ae60;
+        }
+
+        .card-front.question .card-content {
+            color: #1565c0;
+        }
+
+        .card-front.answer .card-content {
+            color: #6a1b9a;
+        }
+
+        .card-content {
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .card.matched .card-content {
+            color: #27ae60;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #95a5a6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .modal h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .modal p {
+            color: #7f8c8d;
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+        }
+
+        .modal .btn {
+            background: linear-gradient(135deg, #c0392b 0%, #e67e22 100%);
+            width: 100%;
+        }
+
+        .modal .btn:hover {
+            background: linear-gradient(135deg, #a93226 0%, #d35400 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trò chơi Lật Thẻ Nhớ: Đường Lối Đổi Mới</h1>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <span>🕐</span>
+                <span class="stat-label">Thời gian chơi:</span>
+                <span class="stat-value" id="timer">00:00</span>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="controls">
+            <button class="btn" onclick="resetGame()">🔄 Chơi lại</button>
+        </div>
+    </div>
+
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <div class="modal-icon">🏆</div>
+            <h2>🎉 Chúc mừng!</h2>
+            <p>Bạn đã hoàn thành trong <span id="finalTime" style="font-weight: bold; color: #c0392b;">00:00</span></p>
+            <button class="btn" onclick="resetGame()">🔄 Chơi lại</button>
+        </div>
+    </div>
+
+    <script>
+        const cardPairs = [
+            {
+                question: "Đường lối công nghiệp hóa đất nước đã được hình thành từ",
+                answer: "Đại hội VI của Đảng Cộng sản Việt Nam (1986)"
+            },
+            {
+                question: "Đại hội VI của Đảng (1986) đánh dấu bước ngoặt về đổi mới tư duy của Đảng, trước hết là tư duy về lĩnh vực",
+                answer: "Kinh tế"
+            },
+            {
+                question: "Cương lĩnh xây dựng đất nước trong thời kỳ quá độ lên CNXH (1991) nêu rõ xã hội XHCN mà nhân dân ta xây dựng là",
+                answer: "Một xã hội có 5 đặc trưng cơ bản"
+            },
+            {
+                question: "Nghị quyết TW lần thứ 2 (khóa VIII) đánh giá giáo dục – đào tạo với khoa học - công nghệ có vai trò",
+                answer: "Là quốc sách hàng đầu"
+            },
+            {
+                question: "Lần đầu tiên khẳng định 'Phải đặt lợi ích quốc gia - dân tộc lên trên hết' tại",
+                answer: "Đại hội XII của Đảng (2016)"
+            },
+            {
+                question: "'Việt Nam sẵn sàng là bạn, là đối tác tin cậy của các nước' được đề ra tại",
+                answer: "Đại hội IX của Đảng (2001)"
+            },
+            {
+                question: "Lần đầu tiên sử dụng khái niệm 'hệ thống chính trị' thay cho 'chuyên chính vô sản' là ở",
+                answer: "Đại hội VI của Đảng (1986)"
+            },
+            {
+                question: "Yếu tố là nền tảng và động lực của công nghiệp hóa, hiện đại hóa",
+                answer: "Con người"
+            }
+        ];
+
+        let cards = [];
+        let flippedCards = [];
+        let matchedCards = [];
+        let timer = 0;
+        let timerInterval = null;
+        let gameStarted = false;
+
+        function initGame() {
+            cards = [];
+            cardPairs.forEach((pair, idx) => {
+                cards.push({ id: `q${idx}`, content: pair.question, pairId: idx });
+                cards.push({ id: `a${idx}`, content: pair.answer, pairId: idx });
+            });
+            
+            cards.sort(() => Math.random() - 0.5);
+            
+            flippedCards = [];
+            matchedCards = [];
+            timer = 0;
+            gameStarted = false;
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            updateTimer();
+            renderBoard();
+            document.getElementById('winModal').classList.remove('show');
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            cards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.setAttribute('data-index', index);
+                
+                const cardType = card.id.startsWith('q') ? 'question' : 'answer';
+                
+                cardEl.innerHTML = `
+                    <div class="card-container">
+                        <div class="card-side card-back ${cardType}">?</div>
+                        <div class="card-side card-front ${cardType}">
+                            <div class="card-content">${card.content}</div>
+                        </div>
+                    </div>
+                `;
+                
+                cardEl.addEventListener('click', function() {
+                    flipCard(index);
+                });
+                
+                board.appendChild(cardEl);
+            });
+        }
+
+        function flipCard(index) {
+            if (!gameStarted) {
+                gameStarted = true;
+                startTimer();
+            }
+
+            if (flippedCards.length === 2 || 
+                flippedCards.includes(index) || 
+                matchedCards.includes(index)) {
+                return;
+            }
+
+            const cardEl = document.querySelector(`[data-index="${index}"]`);
+            cardEl.classList.add('flipped');
+            flippedCards.push(index);
+
+            if (flippedCards.length === 2) {
+                setTimeout(checkMatch, 600);
+            }
+        }
+
+        function checkMatch() {
+            const [first, second] = flippedCards;
+            const card1 = cards[first];
+            const card2 = cards[second];
+
+            if (card1.pairId === card2.pairId) {
+                matchedCards.push(first, second);
+                document.querySelector(`[data-index="${first}"]`).classList.add('matched');
+                document.querySelector(`[data-index="${second}"]`).classList.add('matched');
+                
+                if (matchedCards.length === cards.length) {
+                    setTimeout(showWinModal, 500);
+                }
+            } else {
+                setTimeout(() => {
+                    document.querySelector(`[data-index="${first}"]`).classList.remove('flipped');
+                    document.querySelector(`[data-index="${second}"]`).classList.remove('flipped');
+                }, 400);
+            }
+
+            flippedCards = [];
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer++;
+                updateTimer();
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(timer / 60);
+            const seconds = timer % 60;
+            const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timer').textContent = timeStr;
+        }
+
+        function showWinModal() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            const minutes = Math.floor(timer / 60);
+            const seconds = timer % 60;
+            const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('finalTime').textContent = timeStr;
+            document.getElementById('winModal').classList.add('show');
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        initGame();
+    </script>
+    <b style="color:#858585; font-size: 10pt; text-align: center;">Màu xanh là thẻ câu hỏi, màu tím là thẻ câu trả lời</b>
+</body>
+</html>
